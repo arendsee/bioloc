@@ -1,0 +1,36 @@
+@type
+
+align :: Bioseq -> BioseqMSA
+
+align_version :: NULL -> Version
+
+align_exists :: NULL -> Bool
+
+open :: Filename -> *
+
+file_exists :: Filename -> Bool
+
+@alias bash
+
+align :: loc_muscle
+align_version :: loc_muscle_version
+align_exists :: loc_muscle_exists
+open :: cat
+
+@source bash
+
+loc_muscle() {
+    muscle -in $1 "$@"
+}
+
+loc_muscle_version() {
+    muscle -version
+}
+
+loc_muscle_exists() {
+    muscle -version | grep -q "Edgar"
+}
+
+file_exists() {
+    test -f $1
+}
