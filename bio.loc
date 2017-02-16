@@ -2,9 +2,9 @@
 
 align :: Bioseq -> BioseqMSA
 
-align_version :: NULL -> Version
+align_version :: void -> Version
 
-align_exists :: NULL -> Bool
+align_exists :: void -> Bool
 
 open :: Filename -> *
 
@@ -12,10 +12,10 @@ file_exists :: Filename -> Bool
 
 @alias bash
 
-align :: loc_muscle
+align         :: loc_muscle
 align_version :: loc_muscle_version
-align_exists :: loc_muscle_exists
-open :: cat
+align_exists  :: loc_muscle_exists
+open          :: cat
 
 @source bash
 

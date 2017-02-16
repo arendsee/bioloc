@@ -18,41 +18,41 @@ ftail    :: Bioseq -> Integer -> Bioseq
 funiq    :: Bioseq -> Bioseq
 fwc      :: Bioseq -> Text
 
-fcut_version     :: NULL -> Version
-fclean_version   :: NULL -> Version
-ffilter_version  :: NULL -> Version
-fgrep_version    :: NULL -> Version
-fmd5sum_version  :: NULL -> Version
-fhead_version    :: NULL -> Version
-fpermute_version :: NULL -> Version
-freverse_version :: NULL -> Version
-frevcmp_version  :: NULL -> Version
-fsample_version  :: NULL -> Version
-fsniff_version   :: NULL -> Version
-fsort_version    :: NULL -> Version
-fstat_version    :: NULL -> Version
-fsubseq_version  :: NULL -> Version
-ftail_version    :: NULL -> Version
-funiq_version    :: NULL -> Version
-fwc_version      :: NULL -> Version
+fcut_version     ,
+fclean_version   ,
+ffilter_version  ,
+fgrep_version    ,
+fmd5sum_version  ,
+fhead_version    ,
+fpermute_version ,
+freverse_version ,
+frevcmp_version  ,
+fsample_version  ,
+fsniff_version   ,
+fsort_version    ,
+fstat_version    ,
+fsubseq_version  ,
+ftail_version    ,
+funiq_version    ,
+fwc_version      :: void -> Version
 
-fcut_exists     :: NULL -> Bool
-fclean_exists   :: NULL -> Bool
-ffilter_exists  :: NULL -> Bool
-fgrep_exists    :: NULL -> Bool
-fmd5sum_exists  :: NULL -> Bool
-fhead_exists    :: NULL -> Bool
-fpermute_exists :: NULL -> Bool
-freverse_exists :: NULL -> Bool
-frevcmp_exists  :: NULL -> Bool
-fsample_exists  :: NULL -> Bool
-fsniff_exists   :: NULL -> Bool
-fsort_exists    :: NULL -> Bool
-fstat_exists    :: NULL -> Bool
-fsubseq_exists  :: NULL -> Bool
-ftail_exists    :: NULL -> Bool
-funiq_exists    :: NULL -> Bool
-fwc_exists      :: NULL -> Bool
+fcut_exists     ,
+fclean_exists   ,
+ffilter_exists  ,
+fgrep_exists    ,
+fmd5sum_exists  ,
+fhead_exists    ,
+fpermute_exists ,
+freverse_exists ,
+frevcmp_exists  ,
+fsample_exists  ,
+fsniff_exists   ,
+fsort_exists    ,
+fstat_exists    ,
+fsubseq_exists  ,
+ftail_exists    ,
+funiq_exists    ,
+fwc_exists      :: void -> Bool
 
 @alias bash
 
@@ -178,7 +178,7 @@ smof_wc() {
 fcut      ::  "emulates UNIX cut command, where fields are entries"
 fclean    ::  "cleans fasta files"
 ffilter   ::  "extracts sequences meeting the given conditions"
-grep      ::  "roughly emulates the UNIX grep command"
+fgrep     ::  "roughly emulates the UNIX grep command"
 fmd5sum   ::  "calculate an md5 checksum for the input sequences"
 fhead     ::  "writes the first sequences in a file"
 fpermute  ::  "randomly order sequence"
