@@ -1,0 +1,20 @@
+@type
+is_fastq :: File -> Bool
+is_in_sequence_space :: File -> Bool
+
+
+@source sh
+
+is_fastq (){
+    awk '
+        NR % 4 == 1 && !/^@/ { bad++ }
+        END { print bad ? "false" : "true" }
+    ' $1
+}
+
+is_in_sequence_space (){
+    awk '
+        NR %4 == 2 && !/^[ACGTN]*$/ { bad++ }
+        END { print bad ? "false" : "true" }
+    ' $1
+}
