@@ -1,2 +1,6 @@
 @path
+null
 
+
+@before
+null :: bowtie2-build . get_chr1
