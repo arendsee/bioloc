@@ -1,0 +1,103 @@
+@type
+print_stats      :: Table -> Void
+plot_lengths     :: Table -> Void
+readGFF          :: File -> Table
+validate_columns :: Table -> Bool
+start_lt_stop    :: Table -> Bool
+has_feature      :: String -> Table -> Bool
+
+
+@alias
+print_stats      :: biomorloc_print_stats
+plot_lengths     :: biomorloc_plot_lengths
+readGFF          :: biomorloc_readGFF
+validate_columns :: biomorloc_validate_columns
+start_lt_stop    :: biomorloc_start_lt_stop
+has_feature      :: biomorloc_has_feature
+
+
+@lang
+print_stats      ,
+plot_lengths     ,
+readGFF          ,
+validate_columns ,
+start_lt_stop    ,
+has_feature      :: R
+
+
+@source R
+
+biomorloc_colnames = c(
+  "seqname", "source", "feature", "start", "end",
+  "score", "strand", "frame", "attributes")
+
+biomorloc_print_stats <- function(gff, outfile){
+    sink(outfile)
+    gff$feature <- as.factor(gff$feature)
+    gff$strand  <- as.factor(gff$strand)
+    gff$frame   <- as.factor(gff$frame)
+    gff$source  <- as.factor(gff$source)
+    gff$seqname <- as.factor(gff$seqname)
+    print(summary(gff))
+    sink()
+}
+
+biomorloc_plot_lengths <- function(gff, outfile){
+    pdf(outfile)
+    hist(log2(gff$end - gff$start + 1))
+    dev.off()
+}
+
+biomorloc_readGFF <- function(x) {
+  gff = read.table(
+    x,
+    sep="\t",
+    stringsAsFactors=FALSE,
+    quote="",
+    header=FALSE,
+    comment.char="#",
+  )
+  colnames(gff) = biomorloc_colnames
+  gff
+}
+
+biomorloc_validate_columns <- function(x) {
+    valid <- TRUE
+    if(ncol(x) != 9){
+        warning("GFF expected to have 9 columns")
+        valid <- FALSE
+    }
+    if(!all(names(x) == biomorloc_colnames)){
+        msg <- "Expected column names: %s"
+        warning(sprintf(msg, paste(biomorloc_colnames, collapse=", ")))
+        valid <- FALSE
+    }
+    if(!is.numeric(x$start) || !is.numeric(x$end)){
+        warning("start and end fields in GFF must be numeric")
+        valid <- FALSE
+    }
+    if(!all(x$strand %in% c("+", "-", "."))){
+        warning("strand expected to only have characters [+-.]")
+        valid <- FALSE
+    }
+    valid
+}
+
+biomorloc_start_lt_stop <- function(x){
+    if(all(x$start <= x$end)){
+        TRUE
+    } else {
+        warning("GFF start > end")
+        FALSE
+    }
+}
+
+biomorloc_has_feature <- function(feature, x){
+    if(feature %in% x$feature){
+        TRUE
+    } else {
+        msg <- "features '%s' is missing in GFF"
+        warning(sprintf(msg, feature))
+        FALSE
+    }
+}
