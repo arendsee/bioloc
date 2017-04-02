@@ -1,5 +1,6 @@
 @type
 get_chr1     ,
+get_gff      ,
 get_2cells_1 ,
 get_2cells_2 ,
 get_6h_1     ,
@@ -45,6 +46,15 @@ get_chr1 (){
     url=ftp://ftp.ncbi.nlm.nih.gov/genomes/D_rerio/CHR_01
     file=dr_ref_GRCz10_chr1.fa.gz
     local_file=$datdir/chr1.fa
+    [[ -f $local_file ]] || wget - $url/$file | gunzip > $local_file
+    echo $local_file
+}
+
+# This is needed to build the splicing sites file
+get_gff (){
+    url=ftp://ftp.ensembl.org/pub/release-88/gff3/danio_rerio
+    file=Danio_rerio.GRCz10.88.gff3.gz
+    local_file=$datdir/full.gff3
     [[ -f $local_file ]] || wget - $url/$file | gunzip > $local_file
     echo $local_file
 }
