@@ -1,10 +1,10 @@
 @type
-get_chr1     ,
-get_gff      ,
-get_2cells_1 ,
-get_2cells_2 ,
-get_6h_1     ,
-get_6h_2     :: Void -> File
+get_reference ,
+get_gff       ,
+get_2cells_1  ,
+get_2cells_2  ,
+get_6h_1      ,
+get_6h_2      :: Void -> File
 
 @source sh
 
@@ -42,7 +42,7 @@ get_6h_2 (){
     get_ebi_file 6h_2.fastq
 }
 
-get_chr1 (){
+get_reference (){
     url=ftp://ftp.ncbi.nlm.nih.gov/genomes/D_rerio/CHR_01
     file=dr_ref_GRCz10_chr1.fa.gz
     local_file=$datdir/chr1.fa

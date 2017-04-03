@@ -4,38 +4,120 @@ This RNA-seq example is based off the EBI tutorial at:
 https://www.ebi.ac.uk/training/online/course/ebi-next-generation-sequencing-practical-course/rna-sequencing/rna-seq-analysis-transcriptome
 
 @type
+bowtie2-build ::
+       [File] # input reference sequence files
+    ->  File  # output build database directory and root, e.g. 'dir/base'
+
 tophat ::
-       File # first paired-end file
-    -> File # second paired-end file
-    -> File # BAM file
+       String # root string
+    -> File   # bowtie2-build base
+    -> File   # BAM file
 
 cufflinks ::
-       File # BAM file
-    -> Table # GTF file
+       [File] # SAM file
+    -> Table  # GTF file
+
+cuffmerge ::
+    -> [File] # any number of GTF files
+    -> [File] # transcript files
+    ->  File  # Merged transcript file
 
 cuffdiff ::
        Table # GTF file from cufflinks
-    -> File # BAM from a
-    -> File # BAM from b
+    -> String # root
     -> Table # Differential gene expression table
 
 @path
-null . cuffdiff . *gtf (cufflinks:a . tophat:a . *ar1 *ar2)
-                       (cufflinks:b . tophat:b . *br1 *br2)
+  cuffdiff
+  .
+  cuffmerge
+  .
+  cufflinks id
+  .
+  map
+  .
+  ( tophat . $1 bowtie2-build . get_reference )
+  ( c . '6h' '2cells' )
 
-ar1 :: 'data/2cells_1.fastq'
-ar2 :: 'data/2cells_2.fastq'
 
-br1 :: 'data/6h_1.fastq'
-br2 :: 'data/6h_2.fastq'
+# @path
+# cuffdiff
+#   .
+#   cuffmerge
+#   <tophat:a>
+#   <tophat:b>
+#   .
+#   ( cufflinks . tophat:a . id *a1 *a2 )
+#   ( cufflinks . tophat:b . id *b1 *b2 )
+#   .
+#   bowtie2-build
+#   .
+#   get_reference
+#
+# a1 :: get_2cells_1
+# a2 :: get_2cells_2
+# b1 :: get_6h_1
+# b2 :: get_6h_2
 
-gtf :: 'annotation/Danio_rerio.Zv9.66.gtf'
+@assert
+cuffdiff :: fastq_check . *ar1 *ar2 *br1 *br2 #TODO implement
+cuffidff :: gtf_check . *gtf
 
 @before
-null :: bowtie2-build . get_chr1
+cuffdiff :: jellyfish . *ar1 #TODO or something
 
+@alias
+tophat :: m_tophat
+cufflinks :: m_cufflinks
+cuffdiff :: m_cuffdiff
+bowtie2-build :: m_bowtie2-build
+
+@source sh
+
+# tophat ::
+#        File # first paired-end file
+#     -> File # second paired-end file
+#     -> File # BAM file
+m_tophat (){
+    a=${@:$#}
+    a=${a%.*}
+    tophat $@ $a
+    echo $a
+}
+
+#        File  # BAM file
+#     -> Table # GTF file
+m_cufflinks (){
+    a1=${@:$#}
+    a1=cufflinks/${a1%.sam}_gtf
+    cufflinks -o $a1 $@
+    echo $a1
+}
+
+#        Table # GTF file from cufflinks
+#     -> File  # BAM from a
+#     -> File  # BAM from b
+#     -> Table # Differential gene expression table
+get_base (){
+    echo $(sed 's/.*\///; s/\.[^.]\+$//' <<< $1)
+}
+
+m_cuffdiff (){
+    b=${@:$#-1}
+    a=${@:$#-2}
+    gtf=${@:$#-3}
+    # cuffdiff -L $(get_base $a),$(get_base $b) $@
+    echo $a $b $gtf
+}
+
+#        File # input Genome file
+#     -> File # output build database directory
+m_bowtie2-build (){
+    bowtie2-build $@   
+}
 
 @arg
+# common tophat arguments
 tophat ::
     --solexa-quals
     -g 2 # only record hits that map to a maximum of 2 locations
@@ -44,8 +126,8 @@ tophat ::
     -o=tophat/ZV9_2cells
     genome/ZV9
 
+# common cufflinks arguments
 cufflinks ::
-    -o cufflinks/ZV9_2cells_gff
     -G annotation/Danio_rerio.Zv9.66.gtf
     -p 8
     -b genome/Danio_rerio.Zv9.66.dna.fa
@@ -54,8 +136,6 @@ cufflinks ::
 
 cuffdiff ::
     -o cuffdiff/
-    -L ZV9_2cells,ZV9_6h
     -T
-    -b genome/Danio_rerio.Zv9.66.dna.fa
     -u
     --library-type fr-unstranded
