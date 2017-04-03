@@ -1,6 +1,61 @@
-@path
-null
+@comment
 
+This RNA-seq example is based off the EBI tutorial at:
+https://www.ebi.ac.uk/training/online/course/ebi-next-generation-sequencing-practical-course/rna-sequencing/rna-seq-analysis-transcriptome
+
+@type
+tophat ::
+       File # first paired-end file
+    -> File # second paired-end file
+    -> File # BAM file
+
+cufflinks ::
+       File # BAM file
+    -> Table # GTF file
+
+cuffdiff ::
+       Table # GTF file from cufflinks
+    -> File # BAM from a
+    -> File # BAM from b
+    -> Table # Differential gene expression table
+
+@path
+null . cuffdiff . *gtf (cufflinks:a . tophat:a . *ar1 *ar2)
+                       (cufflinks:b . tophat:b . *br1 *br2)
+
+ar1 :: 'data/2cells_1.fastq'
+ar2 :: 'data/2cells_2.fastq'
+
+br1 :: 'data/6h_1.fastq'
+br2 :: 'data/6h_2.fastq'
+
+gtf :: 'annotation/Danio_rerio.Zv9.66.gtf'
 
 @before
 null :: bowtie2-build . get_chr1
+
+
+@arg
+tophat ::
+    --solexa-quals
+    -g 2 # only record hits that map to a maximum of 2 locations
+    -p 8 # number of threads
+    --library-type=fr-unstranded
+    -o=tophat/ZV9_2cells
+    genome/ZV9
+
+cufflinks ::
+    -o cufflinks/ZV9_2cells_gff
+    -G annotation/Danio_rerio.Zv9.66.gtf
+    -p 8
+    -b genome/Danio_rerio.Zv9.66.dna.fa
+    -u
+    --library-type=fr-unstranded
+
+cuffdiff ::
+    -o cuffdiff/
+    -L ZV9_2cells,ZV9_6h
+    -T
+    -b genome/Danio_rerio.Zv9.66.dna.fa
+    -u
+    --library-type fr-unstranded
