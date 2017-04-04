@@ -4,53 +4,43 @@ This RNA-seq example is based off the EBI tutorial at:
 https://www.ebi.ac.uk/training/online/course/ebi-next-generation-sequencing-practical-course/rna-sequencing/rna-seq-analysis-transcriptome
 
 @path
-main ::
-  null
-  .
-  cuffdiff
-  .
-  cuffmerge
-  .
-  *map_cufflinks id
-  .
-  *map_tophat
-
-map_cufflinks ::
-    map . &(cufflinks . $1) id
-
-map_tophat ::
-    map . &( tophat . <bowtie2-build> (lhs . $1) (rhs . $1) )
-           ( c . 'leaf' 'flower' )
-
-_ :: bowtie2-build . get_reference
+main     :: cuffdiff . (cuffmerge . *assemble) id . *align
+assemble :: map . &(cufflinks . $1) id
+align    :: map2 . &( tophat . *index $1 $2 ) *infastq
+index    :: bowtie2-build . get_reference
+infastq  :: 'fastq-list.tab'
 
 @cache
 bowtie2-build :: datcache
 
-@2
-tophat := get_fastq . $1
-tophat :+ symlink . <get_fastq> $1
-
-@3
-tophat := rm . <get_fastq>
+@before
+bowtie2-build :: genome_stats . <get_reference>
 
 @assert
-tophat :+ is_fastq . <lhs>
-tophat :+ is_fastq . <rhs>
-tophat :+ is_in_sequence_space . <lhs>
-tophat :+ is_in_sequence_space . <rhs>
-tophat :+ equal_length . <lhs> <rhs>
+# perm :: [(a -> Bool)] -> [a] -> [((a -> Bool), a)]
+# tophat :+ all . perm . [is_fastq, is_in_sequence_space] [$1, $2]
+
+tophat :+ equal_length . $1 $2
 
 
 @arg
 # arguments shared between all programs
 tophat,cufflinks,cuffdiff :: --library-type fr-unstranded
+tophat,cufflinks,cuffdiff,cuffmerge :: --num-threads 8
 
-tophat    :: --solexa-quals -g 2 -p 8
-cufflinks :: -p 8 -u
+tophat    :: --solexa-quals -g 2
+cufflinks :: -u
 cuffdiff  :: -T -u
 
 @include
 accessors
 validators
 wrappers
+
+@source sh
+map2 (){
+    while read line
+    do
+        $1 "$2"
+    done
+}

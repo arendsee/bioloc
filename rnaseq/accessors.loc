@@ -1,7 +1,6 @@
 @type
-get_reference :: Void ->  File
-get_gff       :: Void ->  File
-get_fastq     :: Void -> [File]
+get_reference :: Void -> File
+get_fastq     :: File -> File
 
 @source sh
 
@@ -10,36 +9,19 @@ ebi_url=ftp://ftp.ebi.ac.uk/pub/training/Train_online/RNA-seq_exercise
 
 [[ -d ebi_data ]] | mkdir $ebi_data
 
-get_url (){
-    echo $ebi_url/$1
-}
-
 check_url (){
     wget --spider -q $1 && echo "true" || echo "false"
 }
 
-get_ebi_file (){
-    [[ ! -f $datdir/$1 ]] && wget -O $datdir/$1 $ebi_url/$1
-    echo $datdir/$1
-}
-
 get_fastq (){
-    get_ebi_file $1.fastq
+    [[ -f $datdir/$1 ]] || wget -O $datdir/$1 $ebi_url/$1
+    echo $datdir/$1
 }
 
 get_reference (){
     url=ftp://ftp.ncbi.nlm.nih.gov/genomes/D_rerio/CHR_01
     file=dr_ref_GRCz10_chr1.fa.gz
     local_file=$datdir/chr1.fa
-    [[ -f $local_file ]] || wget - $url/$file | gunzip > $local_file
-    echo $local_file
-}
-
-# This is needed to build the splicing sites file
-get_gff (){
-    url=ftp://ftp.ensembl.org/pub/release-88/gff3/danio_rerio
-    file=Danio_rerio.GRCz10.88.gff3.gz
-    local_file=$datdir/full.gff3
     [[ -f $local_file ]] || wget - $url/$file | gunzip > $local_file
     echo $local_file
 }
