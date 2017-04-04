@@ -1,10 +1,7 @@
 @type
-get_reference ,
-get_gff       ,
-get_2cells_1  ,
-get_2cells_2  ,
-get_6h_1      ,
-get_6h_2      :: Void -> File
+get_reference :: Void ->  File
+get_gff       :: Void ->  File
+get_fastq     :: Void -> [File]
 
 @source sh
 
@@ -26,20 +23,8 @@ get_ebi_file (){
     echo $datdir/$1
 }
 
-get_2cells_1 (){
-    get_ebi_file 2cells_1.fastq
-}
-
-get_2cells_2 (){
-    get_ebi_file 2cells_2.fastq
-}
-
-get_6h_1 (){
-    get_ebi_file 6h_1.fastq
-}
-
-get_6h_2 (){
-    get_ebi_file 6h_2.fastq
+get_fastq (){
+    get_ebi_file $1.fastq
 }
 
 get_reference (){
