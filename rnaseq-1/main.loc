@@ -1,14 +1,24 @@
 @comment
 
-This RNA-seq example is based off the EBI tutorial at:
-https://www.ebi.ac.uk/training/online/course/ebi-next-generation-sequencing-practical-course/rna-sequencing/rna-seq-analysis-transcriptome
+The input to this pipeline is a list of SRA runids and their group:
 
-@path
+SRR1914591      pathogenic
+SRR1914590      pathogenic
+SRR1914589      pathogenic
+SRR1914585      non-pathogenic
+SRR1914584      non-pathogenic
+SRR1914583      non-pathogenic
+
+@path sh
 main     :: cuffdiff . (cuffmerge . *assemble) id . *align
 assemble :: map . &(cufflinks . $1) id
-align    :: map2 . &( tophat . *index $1 $2 ) *infastq
+align    :: map2 . &( tophat . *index $1 $2 ) *reads
 index    :: bowtie2-build . get_reference
-infastq  :: 'fastq-list.tab'
+
+reads :: map . &(fastq-dump . prefetch . $1)
+                (nthcol . 1 *rnaseq_data )
+
+rnaseq_data :: 'data.tab'
 
 @cache
 bowtie2-build :: datcache
@@ -32,7 +42,35 @@ tophat    :: --solexa-quals -g 2
 cufflinks :: -u
 cuffdiff  :: -T -u
 
+# Load sra archive into ncbi/public/sra folder
+prefetch ::
+    # maximum file to retrieve (G for gigabyte)
+    --max-size `100G`
+    # download protocol, first try ascp, on fail use http
+    --transport `both`
+    # double-check all refseqs
+    --check-all
+
+# unpack the sra file prefetch retrieves
+fastq-dump ::
+    # append read id (.1, .2) after spot id
+    --readids
+    # split paired-ends into files suffixed with _1 and _2
+    --split-files
+    # output as ACGT rather than color-base (e.g. SOLiD)
+    --dumpbase
+    # skip technical reads (not useable by Kallisto, also
+    # is specific to Illumina multiplexing library
+    # construction protocol)
+    --skip-technical
+    # remove left and right tags
+    --clip
+    # filter used in current 1000 genomes data
+    --qual-filter-1
+
 @include
+core/tables
+
 accessors
 validators
 wrappers

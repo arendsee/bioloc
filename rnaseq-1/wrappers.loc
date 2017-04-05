@@ -1,4 +1,12 @@
 @type
+prefetch ::
+       String # SRA Runid
+    -> File   # the absolute path to a single *.sra file
+
+fastq-dump ::
+        File   # a *.sra file
+     -> [File] # fastq file(s), 2 files for paired end data
+
 bowtie2-build ::
        File # input reference sequence file
     -> File # build database prefix, e.g. 'dir/base'
