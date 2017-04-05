@@ -1,0 +1,67 @@
+@path
+null
+
+fastq_input :: '/shared/class/bcb660/data/RNASeq'
+fastq_files :: ls . 'data/*fastq'
+
+@before
+null :+ setup . *fastq_input
+null :+ fastqc . *fastq_files
+
+@assert
+null :+ are_paired_end . linecount . *fastq_files
+
+@lang
+setup,fastq,null,linecount :: sh
+are_paired_end :: R
+
+@arg
+fastqc :: --threads 8 --quiet
+
+@source sh
+linecount (){
+    wc $@ | awk '{print $1"\t"$2}'
+}
+
+setup (){
+   [[ -d data ]] || mkdir data 
+   ln -sf $1/*fastq $PWD/data
+}
+
+
+@source R
+require(dplyr)
+
+# takes input from wc, e.g.
+# 10023343 leaf_R1.fastq
+# 10023343 leaf_R2.fastq
+# 12433232 root_R1.fastq
+# 12433232 foot_R2.fastq
+# asserts that
+#  1) all files match the pattern /.*_R[12].fastq$/
+#  2) for each /(.*)_R1.fastq/ file, there is a /\1_R2.fastq/ file with the
+#     same number of counts
+# example:
+# x <- data.frame(
+#   count=c(12,12,23,23),
+#   file=c("asdf_R1.fastq", "asdf_R2.fastq", "qwer_R1.fastq", "qwer_R2.fastq")
+# )
+# are_paired_end(x)
+are_paired_end <- function(x){
+    names(x) <- c('count', 'file')
+    is_pair <- grepl("_R[12]\\.fastq$", x$file)
+    if(!all(is_pair)){
+        warning("WARNING: Expected all fastq files to be paired")
+        FALSE
+    } else {
+        x$R <- sub(".*_R([12]).*", "\\1", x$file)
+        x$file <- sub("_R[12].fastq", "", x$file)
+        x <- dplyr::summarise(dplyr::group_by(x, file), n=dplyr::n_distinct(count))
+        if(any(x$n != 1)){
+            warning("Paired end files should have equal numbers of lines")
+            FALSE
+        } else {
+            TRUE 
+        }
+    }
+}

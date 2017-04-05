@@ -1,0 +1,28 @@
+@type
+fastqc :: ? -> Void
+
+# are_paired_end :: Table Int String -> Bool
+are_paired_end :: [(Int,String)] -> Bool
+
+make_gmap_db ::
+       File    # genome file
+    -> void
+
+gmap_align ::
+       File # gmap database
+    -> File # cDNA fastq file
+    -> void
+
+@source sh
+
+make_gmap_db (){
+    # TODO get spieces from last argument
+    mkdir $species
+    gmap_build -D $species -d $species $@
+}
+
+gmap_align (){
+    db_file=$1
+    cdna_file=$2
+    gmap $@ -d $db_file $cdna_file
+}
