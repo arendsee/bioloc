@@ -1,6 +1,46 @@
-@path
-null
+@comment
 
+This RNA-seq example is based off the EBI tutorial at:
+https://www.ebi.ac.uk/training/online/course/ebi-next-generation-sequencing-practical-course/rna-sequencing/rna-seq-analysis-transcriptome
+
+@path
+main     :: cuffdiff . (cuffmerge . *assemble) id . *align
+assemble :: map . &(cufflinks . $1) id
+align    :: map2 . &( tophat . *index $1 $2 ) *infastq
+index    :: bowtie2-build . get_reference
+infastq  :: 'fastq-list.tab'
+
+@cache
+bowtie2-build :: datcache
 
 @before
-null :: bowtie2-build . get_chr1
+bowtie2-build :: genome_stats . <get_reference>
+
+@assert
+# perm :: [(a -> Bool)] -> [a] -> [((a -> Bool), a)]
+# tophat :+ all . perm . [is_fastq, is_in_sequence_space] [$1, $2]
+
+tophat :+ equal_length . $1 $2
+
+
+@arg
+# arguments shared between all programs
+tophat,cufflinks,cuffdiff :: --library-type fr-unstranded
+tophat,cufflinks,cuffdiff,cuffmerge :: --num-threads 8
+
+tophat    :: --solexa-quals -g 2
+cufflinks :: -u
+cuffdiff  :: -T -u
+
+@include
+accessors
+validators
+wrappers
+
+@source sh
+map2 (){
+    while read line
+    do
+        $1 "$2"
+    done
+}

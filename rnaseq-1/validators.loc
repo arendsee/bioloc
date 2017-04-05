@@ -4,7 +4,6 @@ is_in_sequence_space :: File -> Bool
 
 
 @source sh
-
 is_fastq (){
     awk '
         NR % 4 == 1 && !/^@/ { bad++ }

@@ -1,39 +1,104 @@
-@comment
+@type
+bowtie2-build ::
+       File # input reference sequence file
+    -> File # build database prefix, e.g. 'dir/base'
 
-tophat --solexa-quals -g 2 -p 4 --library-type fr-unstranded -j
-annotation/Danio_rerio.Zv9.66.spliceSites -o tophat/ZV9_2cells
-genome/ZV9 data/2cells_1.fastq data/2cells_2.fastq
+tophat ::
+       File # bowtie2-build base
+    -> File # Paired-end fastq, left hand side
+    -> File # Paired-end fastq, right hand side
+    -> File # BAM file
+
+cufflinks ::
+       File  # BAM file
+    -> Table # GTF file
+
+cuffmerge ::
+    -> [File] # n GTF files (from cufflinks)
+    -> [File] # n BAM files (from `map tophat`)
+    ->  File  # 1 BAM file - merged transcript file
+
+cuffdiff ::
+       Table  # GTF file from cufflinks
+    -> String # root
+    -> Table  # Differential gene expression table
+
+lhs ::
+       String # root string
+    -> File   # paired-end fastq
+
+rhs ::
+       String # root string
+    -> File   # paired-end fastq
+
+tophat_version    ,
+cufflinks_version ,
+cuffdiff_version  ,
+cuffmerge_version ,
+samtools_version  :: Void -> String
 
 @alias
-tophat        :: loc_tophat
-cufflinks     :: loc_cufflinks
-samtools      :: loc_samtools
-htseq-count   :: loc_htseq-count
-deseq2        :: loc_deseq2
-star          :: loc_star
-bowtie2-build :: loc_bowtie2-build
-
-@doc
-tophat        :: "yolo"
-cufflinks     :: "yolo"
-samtools      :: "yolo"
-htseq-count   :: "yolo"
-deseq2        :: "yolo"
-star          :: "yolo"
-bowtie2-build :: "yolo"
+tophat        :: m_tophat
+cufflinks     :: m_cufflinks
+cuffdiff      :: m_cuffdiff
+bowtie2-build :: m_bowtie2-build
+lhs           :: m_lhs
+rhs           :: m_rhs
 
 @source sh
-get_index_base () {
-    genome=$1
-    dir=${genome%/*}
-    base=idx_
-    bowtie2-build $1 $dir/$base
-    echo $base
+m_bowtie2-build (){
+    prefix=bowtie_db/xx # doesn't matter what this is
+    bowtie2-build $@ -o $prefix
+    echo $prefix
 }
 
-loc_tophat () {
-    index_base=$1
-    reads_1=$1
-    reads_2=$2
-    tophat $index_base $reads_1 $reads_2
+get_fastq (){
+    echo data/$1_$2.fastq
+}
+m_lhs (){
+    echo $(get_fastq $1 1)
+}
+m_rhs (){
+    echo $(get_fastq $1 2)
+}
+
+# [options]* <bowtiedb> <reads1_1>[,<read(\d+)_1>] <reads1_2>[,<read\1_2>]
+m_tophat (){
+    out=${@:$#}
+    out=${out%.*}
+    tophat $@ -o $out
+    # this file is hardcoded by tophat
+    echo $out/accepted_hits.bam
+}
+
+m_cufflinks (){
+    out=${@:$#}
+    out=${out%.*}
+    cufflinks $@ -o $out
+    echo $out/transcripts.gtf
+}
+
+get_labels (){
+    echo "$@" | sed -n 's/\.sam  */,/g; s/.* //; s/\.sam//pg'
+}
+m_cuffdiff (){
+    labels=$(sed -n 's/\.sam  */,/g; s/.* //; s/\.sam//pg' <<< "$@")
+    cuffdiff $@ -L $labels -o cuffdiff
+    echo cuffdiff
+}
+
+tophat_version (){
+    tophat -v
+}
+
+cufflinks_version (){
+    cufflinks -v
+}
+
+samtools_version (){
+    cuffdiff -v
+}
+
+samtools_version (){
+    cuffmerge -v
 }
