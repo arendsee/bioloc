@@ -1,0 +1,51 @@
+@type
+get_te_gff :: void -> [[String]]
+get_synmaps :: void -> [String]
+search :: [[String]] -> String -> [[String]]
+file.exists :: String -> Bool
+log :: * -> void
+
+@path
+map . &(nrow . search . get_te_gff $1) get_synmaps
+
+@lang
+* :: R
+get_te_gff,get_synmaps,log :: sh
+
+
+@check
+search :: file.exists . $1
+
+@4 sh
+search :: log . $1
+
+@source sh
+get_te_gff (){
+    awk '
+        /^[^#]/ &&
+        $3 == "mobile_genetic_element" &&
+        $9 ~ /Ty1/ == "mobile_genetic_element"
+    ' data/scerevisiae.gff
+}
+
+get_synmaps (){
+    ls data/*syn
+}
+
+log (){
+    cat $1 >&2 || echo $1 >&2
+}
+
+@source R
+require(synder)
+search <- function(focal_gff, synmap_file){
+    synmap <- synder::read_synmap(synmap_file)
+    synder::search(syn=synmap, gff=focal_gff)
+}
+
+
+@include
+core/type
+core/atomic
+core/control
+core/datcache
