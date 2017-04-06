@@ -65,7 +65,23 @@ Problems:
        foo -a $a -b $b $\@
     }
 
- 2. I should be able to attach checks and whatnot to groups (*quantify).
+ 2. I should be able to attach checks and whatnot to groups (e.g. *quantify). I
+    should also be able to set their type.
+
+ 3. conventions for languages vary, specifically, Haskell likes having the data
+    last in order and the parameters or functions first. For example, a `select`
+    function that extracts one column from a table, would in Haskell have the
+    signature:
+   
+    Select :: Int -> Table -> [a]
+   
+    But in R would probably be
+   
+    Select :: Table -> Int -> [a]
+   
+    Data first in R is needed for magrittresque piping, whereas having the data
+    last allows less variable things to be curried out in Haskell.
+
 
 Manuals:
 
@@ -76,11 +92,10 @@ RNA-seq tutorials:
 http://sparta-teaching.readthedocs.io/en/latest/rnaseqbackground.html
 
 @path sh
-
 main ::
     *quantify
     .
-    *merge_assemblies
+    *merge
     <map2:gtfs>
     .
     map:transcripts
@@ -93,38 +108,28 @@ main ::
     .
     &( *retrieve . $1 ) *runids
 
-
-quantify :: cuffdiff . (cuffmerge . *assemble) id . *align
-
-# --- assemble transcripts ---
-assemble :: map . &(cufflinks . $1) id
-
-# --- mapping ---
-align :: map2 . &( tophat . *index $1 $2 ) *reads
-
-# --- setup ---
-# get fastq data
-reads :: map . &(trimmomatic . fastq-dump . prefetch . $1) *runids
-# get genome and build mapping database
-index :: bowtie2-build . *reference_genome
-
-# --- basal inputs ---
-runids :: nthcol . 1 *rnaseq_table
+quantify     :: cuffdiff
+merge        :: cuffmerge
+assemble     :: cufflinks
+align        :: tophat
+genome_db    :: bowtie2-build . get_reference
+clean        :: trimmomatic
+retrieve     :: fastq-dump . prefetch
+runids       :: nthcol . 1 *rnaseq_table
 rnaseq_table :: 'data.tab'
-reference_genome :: get_reference
 
 
 @cache
-bowtie2-build :: datcache
+* :: datcache
 
-@before
-bowtie2-build :: genome_stats . <get_reference>
-
-@assert
-# perm :: [(a -> Bool)] -> [a] -> [((a -> Bool), a)]
-# tophat :+ all . perm . [is_fastq, is_in_sequence_space] [$1, $2]
-
-tophat :+ equal_length . $1 $2
+# @before
+# bowtie2-build :: genome_stats . <get_reference>
+#
+# @assert
+# # perm :: [(a -> Bool)] -> [a] -> [((a -> Bool), a)]
+# # tophat :+ all . perm . [is_fastq, is_in_sequence_space] [$1, $2]
+#
+# tophat :+ equal_length . $1 $2
 
 
 @arg
