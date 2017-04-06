@@ -1,0 +1,10 @@
+@type
+blast :: Text -> Table
+lm :: Table -> Text
+
+@path
+lm . blast . query target
+
+@lang
+lm :: R
+blast :: sh

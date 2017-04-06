@@ -1,4 +1,12 @@
 @path
+
+# 1) get data
+# 2) transcriptome QC
+# 3) genome GC (?)
+# 4) align reads to genome (e.g. GSNAP)
+# 5) HTSeq
+# 6) R -- quasiseq, general stats
+
 null
 
 fastq_input :: '/shared/class/bcb660/data/RNASeq'
