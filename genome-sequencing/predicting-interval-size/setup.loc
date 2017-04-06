@@ -1,5 +1,10 @@
 @comment
 
+Here is a partial solution to a bioinformatics homework set made by Andrew
+Severin.
+
+Problem description:
+
 You received some free sequencing data from a DNA facility that is testing out
 their mate-pair library prep. In exchange they want to know how well they
 prepared the library.  They have estimated the insert size to be 8000 bases.It
@@ -26,13 +31,12 @@ Steps:
 
 @type
 get_genome ::
-       String  # URL
-    -> File    # genome file (unzipped fasta)
-    -> void    # output nothing
+       String # URL
+    -> Text   # FASTA genome sequence
 
 make_gmap_db ::
-       File    # genome file
-    -> String  # species name
+       File   # genome file
+    -> String # species name
     -> void
 
 gmap_align ::
@@ -43,8 +47,6 @@ gmap_align ::
 insert_size ::
        ?   # I don't know what I need yet
     -> Num # Final result
-
-filecheck :: ? -> Bool
 
 
 @source sh
@@ -77,19 +79,6 @@ cat *scr                                                   |
     awk '$2>50'
 }
 
-filecheck (){
-    result='false'
-    for f in $@
-    do
-        if [[ ! -f $1 ]]
-        then
-            echo "ERROR: file '$1' not found" >&2
-            result='false'
-        fi
-    done
-    echo $result
-}
-
 @path
 _ :: get_genome . *genome_url *genome_seq
 _ :: make_gmap_db . *genome_seq *species
@@ -101,5 +90,5 @@ species    :: 'zea_mays'
 db_file    :: 'SOMETHING'
 cdna_file  :: '*R[12]*.fastq'
 
-@check
-insert_size :: filecheck . 'a' 'b' 'c'
+@assert
+insert_size :: readable . 'a'
