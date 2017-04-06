@@ -86,6 +86,10 @@ Problems:
     currying and type based recognition of open manifolds (to avoid all the lambda
     function declarations).
 
+ 5. I want to be able to document parameters. Find some system for wrapping
+    positionals ... a way to deal with the idiosyncrasies of standalone
+    programs.
+
 Manuals:
 
 http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf
@@ -102,8 +106,8 @@ quantify - <map2:gtfs>        $
 merge                         $
 map:trans assemble            $
 map2:gtfs (align . genome_db) $
-map:clean_qs clean            $
-map:dirty_qs retrieve runids
+map:clean clean               $
+map:dirty retrieve runids
 
 # magic morloc style 2
 do &(
@@ -111,8 +115,8 @@ do &(
     merge                    .
     map:trans assemble       .
     map2:gtfs (align . $1)   .
-    map:clean_qs clean       .
-    map:dirty_qs retrieve $2
+    map:clean clean          .
+    map:dirty retrieve $2
 ) genome_db runids
 
 # lisp style
@@ -191,6 +195,17 @@ These different syntactic styles are just different ways of passing the control
 information to the compiler. Some are more succinct than others, and this
 matters, but really is just sugar.
 
+
+###
+
+move the R bloat to approach,
+
+outline - 
+
+highlights - what parts of the program should I highlight
+
+Monday 3pm
+
 @path sh
 main ::
     *quantify
@@ -202,9 +217,9 @@ main ::
     .
     &( *assemble . $1 ) map2:gtfs
     .
-    &( *align . *genome_db $1 $2 ) map:clean_qs
+    &( *align . *genome_db $1 $2 ) map:clean
     .
-    &( *clean . $1 ) map:dirty_qs
+    &( *clean . $1 ) map:dirty
     .
     &( *retrieve . $1 ) *runids
 
