@@ -82,6 +82,9 @@ Problems:
     Data first in R is needed for magrittresque piping, whereas having the data
     last allows less variable things to be curried out in Haskell.
 
+ 4. I don't like the composition syntax; it is a little hard to read. I need
+    currying and type based recognition of open manifolds (to avoid all the lambda
+    function declarations).
 
 Manuals:
 
@@ -90,6 +93,103 @@ http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual
 RNA-seq tutorials:
 
 http://sparta-teaching.readthedocs.io/en/latest/rnaseqbackground.html
+
+
+### Syntactic styles ###
+
+# magic morloc style
+quantify - <map2:gtfs>        $
+merge                         $
+map:trans assemble            $
+map2:gtfs (align . genome_db) $
+map:clean_qs clean            $
+map:dirty_qs retrieve runids
+
+# magic morloc style 2
+do &(
+    quantify - <map2:gtfs>   .
+    merge                    .
+    map:trans assemble       .
+    map2:gtfs (align . $1)   .
+    map:clean_qs clean       .
+    map:dirty_qs retrieve $2
+) genome_db runids
+
+# lisp style
+null (
+  quantify (
+    merge (
+      map:trans assemble (
+        map2:gtfs (align . genome_db) (
+          map:clean clean (
+            map:dirty retrieve runids
+          )
+        )
+      )
+    )
+  )
+  <map2:gtfs>
+)
+
+# with Haskell '$' operators
+null $
+quantify
+  (
+    merge                         $
+    map:trans assemble            $
+    map2:gtfs (align . genome_db) $
+    map:clean clean               $
+    map:dirty retrieve            $
+    runids
+  )
+  <map2:gtfs>
+
+# Haskell syntax with composition
+main      = (null . quantify) assembly alignment
+assembly  = (merge . map:trans assemble) . alignment
+alignment =
+  (
+    map2:gtfs (align . genome_db) .
+    map:clean clean               .
+    map:dirty retrieve
+  )
+  runids
+
+
+
+# map  :: (a -> b) -> [a] -> [b]
+# map2 :: (a -> b -> c) -> [(a,b)] -> [c]
+
+# main      :: Void -> Void  # the full pipeline does nothing
+# null      :: a -> Void
+# quantify  :: GTF -> FPKM
+# merge     :: [GTF] -> GTF
+# map:trans :: (BAM -> GTF) -> [BAM] -> [GTF]
+# assemble  :: BAM -> GTF
+# map2:gtfs :: (a -> Fastq -> Fastq -> BAM) -> [(Fastq,Fastq)] -> [BAM]
+# align     :: a -> Fastq -> Fastq -> BAM
+# genome_db :: Void -> a # where a may be a fasta file, an
+                         # indexed file, or whatever `align` needs
+# map:clean :: (Fastq -> Fastq) -> [(Fastq,Fastq)] -> [(Fastq,Fastq)]   # **WRONG**
+# clean     :: Fastq -> Fastq
+# map:dirty :: (Runid -> (Fastq,Fastq)) -> [Runid] -> [(Fastq,Fastq)]
+# retrieve  :: Runid -> (Fastq,Fastq)
+# runids    :: Void -> [Runid]
+
+### =========================== B U T ================================== ###
+
+Does this matter? It is *just* syntax. But if the syntax isn't so important,
+what is?
+
+ 1. the abstraction of control
+ 2. type checking of the entire workflow
+ 3. generation of conversion code using functional type signatures
+ 4. the seamless interface of languages
+ 5. separation of pure data flow from assertions and probes
+
+These different syntactic styles are just different ways of passing the control
+information to the compiler. Some are more succinct than others, and this
+matters, but really is just sugar.
 
 @path sh
 main ::
