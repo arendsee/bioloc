@@ -9,16 +9,110 @@ SRR1914585      non-pathogenic
 SRR1914584      non-pathogenic
 SRR1914583      non-pathogenic
 
+RNA-seq steps
+
+------ Setup -----------------------------
+ * retrieve data
+       [prefetch, fastq-dump]
+ * trim and remove adaptors
+       [trimmomatic] 
+
+------ Initial QC ------------------------
+ * QC on short reads
+       [fastqc]
+ * check genome assembly
+       [assemblathon script]
+
+
+------ Mapping ---------------------------
+ * align to reference
+       [tophat]
+   * SV - how much of the genome is covered?
+        - how many of the reads are mapped?
+
+------ Reconstruction/quantification -----
+ * assemble transcripts
+       [cufflinkes . cuffmerge]
+   * SV - how many transcripts are there?
+        - how many genes are represented?
+        - how active is splicing?
+   * group transcripts by gene
+ * count gene features
+       [cufflinks | (gsnap,HTSeq)] 
+   * SV
+
+------ Comparison ------------------------
+ * differential gene expression
+       [edgeR,cuffdiff]
+   * SV
+
+Problems:
+
+ 1. In Bash, it is tricky to specify how formal inputs map to arguments. For
+    example, in a function `foo :: A -> B -> C`, where `foo` in Bash has the
+    form: `foo -a A -b B [options]`,  I need to map
+
+    $\@ A B ---> $\@[-2] -a A -b B
+
+    I need to remove the last two elements from the input argument vector and
+    make them names parameters. And this is awkward ...
+
+    If the positionals came first, I could just do:
+
+    wrap_foo (){
+       a=$1 ; shift
+       b=$2 ; shift
+       foo -a $a -b $b $\@
+    }
+
+ 2. I should be able to attach checks and whatnot to groups (*quantify).
+
+Manuals:
+
+http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/TrimmomaticManual_V0.32.pdf
+
+RNA-seq tutorials:
+
+http://sparta-teaching.readthedocs.io/en/latest/rnaseqbackground.html
+
 @path sh
-main     :: cuffdiff . (cuffmerge . *assemble) id . *align
+
+main ::
+    *quantify
+    .
+    *merge_assemblies
+    <map2:gtfs>
+    .
+    map:transcripts
+    .
+    &( *assemble . $1 ) map2:gtfs
+    .
+    &( *align . *genome_db $1 $2 ) map:clean_qs
+    .
+    &( *clean . $1 ) map:dirty_qs
+    .
+    &( *retrieve . $1 ) *runids
+
+
+quantify :: cuffdiff . (cuffmerge . *assemble) id . *align
+
+# --- assemble transcripts ---
 assemble :: map . &(cufflinks . $1) id
-align    :: map2 . &( tophat . *index $1 $2 ) *reads
-index    :: bowtie2-build . get_reference
 
-reads :: map . &(fastq-dump . prefetch . $1)
-                (nthcol . 1 *rnaseq_data )
+# --- mapping ---
+align :: map2 . &( tophat . *index $1 $2 ) *reads
 
-rnaseq_data :: 'data.tab'
+# --- setup ---
+# get fastq data
+reads :: map . &(trimmomatic . fastq-dump . prefetch . $1) *runids
+# get genome and build mapping database
+index :: bowtie2-build . *reference_genome
+
+# --- basal inputs ---
+runids :: nthcol . 1 *rnaseq_table
+rnaseq_table :: 'data.tab'
+reference_genome :: get_reference
+
 
 @cache
 bowtie2-build :: datcache
