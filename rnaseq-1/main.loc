@@ -195,17 +195,6 @@ These different syntactic styles are just different ways of passing the control
 information to the compiler. Some are more succinct than others, and this
 matters, but really is just sugar.
 
-
-###
-
-move the R bloat to approach,
-
-outline - 
-
-highlights - what parts of the program should I highlight
-
-Monday 3pm
-
 @path sh
 main ::
     *quantify
@@ -236,16 +225,6 @@ rnaseq_table :: 'data.tab'
 
 @cache
 * :: datcache
-
-# @before
-# bowtie2-build :: genome_stats . <get_reference>
-#
-# @assert
-# # perm :: [(a -> Bool)] -> [a] -> [((a -> Bool), a)]
-# # tophat :+ all . perm . [is_fastq, is_in_sequence_space] [$1, $2]
-#
-# tophat :+ equal_length . $1 $2
-
 
 @arg
 # arguments shared between all programs
@@ -284,7 +263,6 @@ fastq-dump ::
 
 @include
 core/tables
-
 accessors
 validators
 wrappers

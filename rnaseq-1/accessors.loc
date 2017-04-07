@@ -1,22 +1,9 @@
 @type
 get_reference :: Void -> File
-get_fastq     :: File -> File
 
 @source sh
 
 datdir=INPUT
-ebi_url=ftp://ftp.ebi.ac.uk/pub/training/Train_online/RNA-seq_exercise
-
-[[ -d ebi_data ]] | mkdir $ebi_data
-
-check_url (){
-    wget --spider -q $1 && echo "true" || echo "false"
-}
-
-get_fastq (){
-    [[ -f $datdir/$1 ]] || wget -O $datdir/$1 $ebi_url/$1
-    echo $datdir/$1
-}
 
 get_reference (){
     url=ftp://ftp.ncbi.nlm.nih.gov/genomes/D_rerio/CHR_01

@@ -31,43 +31,28 @@ cuffdiff ::
     -> String # root
     -> Table  # Differential gene expression table
 
-lhs ::
-       String # root string
-    -> File   # paired-end fastq
+trimmomatic ::
+       File # Fastq input file
+    -> File # Fastq output file
 
-rhs ::
-       String # root string
-    -> File   # paired-end fastq
-
-tophat_version    ,
-cufflinks_version ,
-cuffdiff_version  ,
-cuffmerge_version ,
-samtools_version  :: Void -> String
+tophat_version      ,
+cufflinks_version   ,
+cuffdiff_version    ,
+cuffmerge_version   ,
+trimmomatic_version ,
+samtools_version    :: Void -> String
 
 @alias
 tophat        :: m_tophat
 cufflinks     :: m_cufflinks
 cuffdiff      :: m_cuffdiff
 bowtie2-build :: m_bowtie2-build
-lhs           :: m_lhs
-rhs           :: m_rhs
 
 @source sh
 m_bowtie2-build (){
     prefix=bowtie_db/xx # doesn't matter what this is
     bowtie2-build $@ -o $prefix
     echo $prefix
-}
-
-get_fastq (){
-    echo data/$1_$2.fastq
-}
-m_lhs (){
-    echo $(get_fastq $1 1)
-}
-m_rhs (){
-    echo $(get_fastq $1 2)
 }
 
 # [options]* <bowtiedb> <reads1_1>[,<read(\d+)_1>] <reads1_2>[,<read\1_2>]
@@ -103,10 +88,14 @@ cufflinks_version (){
     cufflinks -v
 }
 
-samtools_version (){
+cuffdiff_version (){
     cuffdiff -v
 }
 
-samtools_version (){
+cuffmerge_version (){
     cuffmerge -v
+}
+
+trimmomatic_version (){
+    trimmomatic -version
 }

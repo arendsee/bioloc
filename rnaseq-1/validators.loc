@@ -1,7 +1,8 @@
 @type
 is_fastq :: File -> Bool
 is_in_sequence_space :: File -> Bool
-
+linecount :: [File] -> Table
+are_paired_end :: Table -> Bool
 
 @source sh
 is_fastq (){
@@ -16,4 +17,45 @@ is_in_sequence_space (){
         NR %4 == 2 && !/^[ACGTN]*$/ { bad++ }
         END { print bad ? "false" : "true" }
     ' $1
+}
+
+linecount (){
+    wc -l $@ | awk '{print $1 / 4"\t"$2}'
+}
+
+@source R
+require(dplyr)
+
+# takes input from wc, e.g.
+# 10023343 leaf_R1.fastq
+# 10023343 leaf_R2.fastq
+# 12433232 root_R1.fastq
+# 12433232 foot_R2.fastq
+# asserts that
+#  1) all files match the pattern /.*_R[12].fastq$/
+#  2) for each /(.*)_R1.fastq/ file, there is a /\1_R2.fastq/ file with the
+#     same number of counts
+# example:
+# x <- data.frame(
+#   count=c(12,12,23,23),
+#   file=c("asdf_R1.fastq", "asdf_R2.fastq", "qwer_R1.fastq", "qwer_R2.fastq")
+# )
+# are_paired_end(x)
+are_paired_end <- function(x){
+    names(x) <- c('count', 'file')
+    is_pair <- grepl("_R[12]\\.fastq$", x$file)
+    if(!all(is_pair)){
+        warning("WARNING: Expected all fastq files to be paired")
+        FALSE
+    } else {
+        x$R <- sub(".*_R([12]).*", "\\1", x$file)
+        x$file <- sub("_R[12].fastq", "", x$file)
+        x <- dplyr::summarise(dplyr::group_by(x, file), n=dplyr::n_distinct(count))
+        if(any(x$n != 1)){
+            warning("Paired end files should have equal numbers of lines")
+            FALSE
+        } else {
+            TRUE 
+        }
+    }
 }
