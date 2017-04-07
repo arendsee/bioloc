@@ -47,8 +47,19 @@ tophat        :: m_tophat
 cufflinks     :: m_cufflinks
 cuffdiff      :: m_cuffdiff
 bowtie2-build :: m_bowtie2-build
+prefetch      :: m_prefetch
 
 @source sh
+
+m_prefetch (){
+    # get the last argument, which should be the runid
+    runid=${@:$#}
+    # download data
+    prefetch $@
+    # print path to downloaded file
+    srapath $runid
+}
+
 m_bowtie2-build (){
     prefix=bowtie_db/xx # doesn't matter what this is
     bowtie2-build $@ -o $prefix
