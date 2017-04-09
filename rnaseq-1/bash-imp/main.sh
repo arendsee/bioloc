@@ -31,27 +31,21 @@ quantify () {
     cat $2 | sed 's/^/ > /'
 }
 
+map () {
+    while read line
+    do
+        $@ $line
+    done
+}
 
 
 # ==================== P A T H ========================
 
-runids |
-
-while read runid
-do
-    retrieve $runid
-done |
-
-while read fastq
-do
-    clean $fastq
-done |
-
-while read fastq
-do
-    align $(genome_db) $fastq | tee -a bam.txt
-done |
-
-merge > transcriptome.gtf
+runids                            |
+    map retrieve                  |
+    map clean                     |
+    map align $(genome_db) $fastq |
+    tee -a bam.txt                |
+    merge > transcriptome.gtf
 
 quantify transcriptome.gtf bam.txt > fpkm.txt
