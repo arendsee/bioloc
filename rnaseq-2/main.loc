@@ -28,7 +28,7 @@ fastqc :: --threads 8 --quiet
 
 @source sh
 linecount (){
-    wc $@ | awk '{print $1"\t"$2}'
+    wc -l $@ | awk '{print $1 / 4"\t"$2}'
 }
 
 setup (){
