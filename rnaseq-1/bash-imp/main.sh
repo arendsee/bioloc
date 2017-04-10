@@ -41,11 +41,28 @@ map () {
 
 # ==================== P A T H ========================
 
-runids                            |
-    map retrieve                  |
-    map clean                     |
-    map align $(genome_db) $fastq |
-    tee -a bam.txt                |
-    merge > transcriptome.gtf
+# runids                            |
+#     map retrieve                  |
+#     map clean                     |
+#     map align $(genome_db) $fastq |
+#     tee -a bam.txt                |
+#     merge > transcriptome.gtf
+#
+# quantify transcriptome.gtf bam.txt > fpkm.txt
+
+
+
+runids | map retrieve | map clean > clean.txt
+
+map is_good < clean.txt | all
+if [[ $? -ne 0 ]]; then
+    echo "Bad output if function 'map clean'"
+    exit 1
+fi
+
+cat clean.txt                 |
+map align $(genome_db) $fastq |
+tee -a bam.txt                |
+merge > transcriptome.gtf
 
 quantify transcriptome.gtf bam.txt > fpkm.txt
